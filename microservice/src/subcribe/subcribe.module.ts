@@ -5,6 +5,7 @@ import { SubcribeService } from './subcribe.service';
 import { SubscriberRepository } from './subcribe.repository';
 import { SubcribeController } from './subcribe.controller';
 
+
 @Module({
   imports: [
     MongooseModule.forFeature([
