@@ -5,7 +5,8 @@ import { PostModule } from './post/post.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Module } from '@nestjs/common';
 
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule ,ConfigService } from '@nestjs/config';
+
 
 @Module({
   imports: [

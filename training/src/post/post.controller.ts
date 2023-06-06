@@ -9,14 +9,51 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,Inject
 } from '@nestjs/common';
+import {   CacheInterceptor,CACHE_MANAGER
+} from '@nestjs/cache-manager';
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 import { PostService } from './post.service';
 import { AuthGuard } from '@nestjs/passport';
-
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CreatePostCommand } from './command/createPost.command';
+import { GetPostQuery } from './query/getPost.query';
+import { Cache } from 'cache-manager';
 @Controller('post')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(private readonly postService: PostService ,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+
+    ) {}
+
+    @Get(':id/get-with-cache')
+    @UseInterceptors(CacheInterceptor)
+    async getPostDetailWithCache(@Param('id') id: string) {
+      console.log('Run here');
+      console.log('dmm')
+      return (await this.postService.getPostById(id)).toJSON();
+    }
+    @Get('cache/demo/set-cache')
+    async demoSetCache() {
+      return await this.postService.getAllPosts();
+    }
+    @Get('cache/demo/get-cache')
+    async demoGetCache() {
+      console.log('get')
+      console.log(this.cacheManager.get('haha'))
+      return this.cacheManager.get('haha');
+    }
+
+    @Get(':id/get-by-query')
+    async getDetailByQuery(@Param('id') id: string) {
+      
+      return this.queryBus.execute(new GetPostQuery(id));
+    }
+
+
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -33,6 +70,11 @@ export class PostController {
   @UseGuards(AuthGuard('jwt'))
   async createPost(@Req() req: any, @Body() post: CreatePostDto) {
     return this.postService.createPost(req.user, post);
+  }
+  @Post('create-by-command')
+  @UseGuards(AuthGuard('jwt'))
+  async createbycommand(@Req() req: any, @Body() post: CreatePostDto) {
+    return this.commandBus.execute(new CreatePostCommand(req.user, post));
   }
   @Put(':id')
   async replacePost(@Param('id') id: string, @Body() post: UpdatePostDto) {

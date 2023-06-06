@@ -9,6 +9,13 @@ import { UserModule } from 'src/user/user.module';
 import { CategoryController } from './category.controller';
 import { CategoryRepository } from './category.repository';
 import { CategoryService } from './category.service';
+import { CqrsModule } from '@nestjs/cqrs';
+import { CreatePostHandler } from './handler/createPost';
+import { GetPostHandler } from './handler/getPost.handler';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as redisStore from 'cache-manager-redis-store';
+
 
 @Module({
   imports: [
@@ -23,8 +30,21 @@ import { CategoryService } from './category.service';
       },
     ]),
     UserModule,
+    CqrsModule,
+    CacheModule.register({
+      imports:[ConfigModule],
+      inject:[ConfigService],
+     useFactory: async (configService: ConfigService):Promise<any> => ({
+      // nhieu thang dung chung
+       // isGlobal: true,
+       store: redisStore,
+       host: configService.get<string>('REDIS_HOST'),
+       port: configService.get<number>('REDIS_PORT'),
+       
+     }),
+    })
   ],
   controllers: [PostController, CategoryController],
-  providers: [PostService, PostRepository, CategoryRepository, CategoryService],
+  providers: [PostService, PostRepository, CategoryRepository, CategoryService ,CreatePostHandler,GetPostHandler],
 })
 export class PostModule {}

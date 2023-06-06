@@ -1,20 +1,25 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable ,Inject} from '@nestjs/common';
 
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 import { PostRepository } from './post.repository';
 
 import { User } from 'src/user/user.model';
 import { CategoryRepository } from './category.repository';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly categoryRepository: CategoryRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async getAllPosts() {
-    return this.postRepository.getByCondition({});
+    const data = await  this.postRepository.getByCondition({});
+    await this.cacheManager.set("haha",data,36000000);
+    return data
   }
 
   async getPostById(post_id: string) {
