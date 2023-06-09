@@ -11,6 +11,9 @@ export class AuthService {
     private jwtService: JwtService,
     public configService: ConfigService,
   ) {}
+  async getAccess2FA(user) {
+    return this.signJwtToken(user, true);
+  }
 
   async register(userDto: CreateUserDto) {
     try {
@@ -43,7 +46,11 @@ export class AuthService {
     return user;
   }
 
-  private async signJwtToken({ email }, refresh = true) {
+  private async signJwtToken(
+    { email },
+    isSecondFactorAuthenticated = false,
+    refresh = true,
+  ) {
     const accessToken = await this.jwtService.signAsync(
       { email },
       {
@@ -61,7 +68,7 @@ export class AuthService {
       );
 
       const user = await this.userService.update(
-        { email: email },
+        { email: email, isSecondFactorAuthenticated },
         {
           refreshToken: refreshToken,
         },

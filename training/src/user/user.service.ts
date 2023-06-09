@@ -3,20 +3,44 @@ import { UserRepository } from './user.repository';
 
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto, LoginUserDto } from './user.dto';
-
+import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private mailerService: MailerService,
+  ) {}
+  async setTwoFactorAuthenticationSecret(secret, user_id) {
+    return this.userRepository.findByIdAndUpdate(user_id, {
+      twoFactorAuthenticationSecret: secret,
+    });
+  }
+  async turnOnTwoFactorAuthentication(user_id: string) {
+    return this.userRepository.findByIdAndUpdate(user_id, {
+      isTwoFactorAuthenticationEnabled: true,
+    });
+  }
+
   async create(userDto: CreateUserDto): Promise<any> {
     const salt = bcrypt.genSaltSync(10);
     userDto.password = await bcrypt.hashSync(userDto.password, salt);
     const userInDb = await this.userRepository.findByCondition({
       email: userDto.email,
     });
-    if (userInDb) {
-      throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
-    }
 
+    // if (userInDb) {
+    //   throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+    // }
+    console.log(userDto.email, userDto.name);
+    await this.mailerService.sendMail({
+      to: userDto.email,
+      subject: 'Welcome to my website',
+      template: './welcome',
+      context: {
+        name: userDto.name,
+      },
+    });
+    console.log('pass');
     userDto.refreshToken = null;
     return await this.userRepository.create(userDto);
   }

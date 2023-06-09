@@ -12,6 +12,9 @@ import { UserController } from './user.controller';
 import { AuthService } from './auth.service';
 import { UserRepository } from './user.repository';
 import { JwtStrategy } from './jwt.strategy';
+import { TwoFactorAuthenticationController } from './twoFactorAuthentication.controller';
+import { TwoFactorAuthenticationService } from './twoFactorAuthentication.service';
+import { JwtTwoFactorStrategy } from './jwtTwoFactor.strategy';
 
 @Module({
   imports: [
@@ -29,7 +32,18 @@ import { JwtStrategy } from './jwt.strategy';
     }),
     JwtModule.register({}),
   ],
-  controllers: [AuthController, UserController],
-  providers: [UserService, AuthService, UserRepository, JwtStrategy],
+  controllers: [
+    AuthController,
+    UserController,
+    TwoFactorAuthenticationController,
+  ],
+  providers: [
+    UserService,
+    AuthService,
+    UserRepository,
+    JwtStrategy,
+    TwoFactorAuthenticationService,
+    JwtTwoFactorStrategy,
+  ],
 })
 export class UserModule {}
